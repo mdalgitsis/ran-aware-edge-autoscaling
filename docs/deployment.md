@@ -4,7 +4,6 @@
 
 - A Kubernetes cluster
 - Prometheus, plus the Prometheus Operator if you want the `ServiceMonitor`s
-- For the operator: a reachable Kafka broker
 
 ## Try it without a cluster first
 
@@ -60,31 +59,6 @@ scale-out arrives after users are already degraded.
 raise it to 1: demand hovering at a replica boundary otherwise scales back and
 forth every reconcile.
 
-## Migration notifier
-
-```bash
-cd operator
-make install            # CRDs
-make deploy IMG=ghcr.io/mdalgitsis/edge-placement-notifier:0.1.0
-```
-
-```yaml
-apiVersion: edge.ranaware.dev/v1
-kind: EdgeAppPlacement
-metadata:
-  name: edge-app-001
-spec:
-  appId: "edge-app-001"
-  edgeNodeId: "edge2"
-  kafka:
-    broker: "kafka.messaging.svc.cluster.local:9092"
-    topic: "edge-placement"
-    message:
-      eventType: "migration"
-```
-
-Changing `spec.edgeNodeId` produces exactly one Kafka event.
-
 ## Dashboard
 
 [`grafana/dashboard.json`](../grafana/dashboard.json) imports as-is. Panels
@@ -100,4 +74,3 @@ Grafana rather than carrying one instance's datasource UID.
 | Replicas oscillate by one | Demand sitting on a replica boundary. Raise `sla.deadband`. |
 | `403` on the scale subresource | `workload.namespace` differs from the release namespace; the Role is created in the former. |
 | Metrics missing from Prometheus | `serviceMonitor.labels.release` must match your Prometheus selector. |
-| Operator sends no event | `spec.edgeNodeId` already equals `status.lastNotifiedEdgeNodeId` — that migration was announced. |

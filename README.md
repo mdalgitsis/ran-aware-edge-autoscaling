@@ -54,12 +54,10 @@ flowchart LR
         observe["observe"] --> policy["policy.decide()<br/><i>pure function</i>"] --> act["scale / deploy / undeploy"]
     end
     k8s[("Kubernetes<br/>edge Deployments")]
-    op["placement notifier<br/>(operator)"]
-    kafka[("Kafka")]
 
     sim --> prom --> observe
     k8s --> observe
-    act --> k8s --> op -->|placement changed| kafka
+    act --> k8s
     act --> prom
 ```
 
@@ -67,7 +65,6 @@ flowchart LR
 | --- | --- |
 | [`autoscaler/`](autoscaler/) | The control loop, with the decision isolated as a pure function |
 | [`ue_simulator/`](ue_simulator/) | RAN telemetry source — you cannot get real radio metrics on a laptop |
-| [`operator/`](operator/) | Go operator: app moves edge node → exactly one Kafka event |
 | [`studies/`](studies/) | The offline evaluation behind the paper |
 | [`charts/`](charts/) · [`docker/`](docker/) · [`grafana/`](grafana/) | Deployment |
 
@@ -82,6 +79,7 @@ a decision, with no I/O, and it is Algorithm 1 of the paper:
 | **HSIA** — Horizontal Service Instance Autoscaler | active user sessions (**CN**) | the `deploy` / `undeploy` branch |
 | **HSRA** — Horizontal Service Resource Autoscaler | aggregated radio traffic (**RAN**) | the `scale` branch, `R = ⌈T / T_opt⌉` (Eq. 1) |
 | **HSECM** — Horizontal Service Edge-Cloud Migration | edge CPU capacity | **not implemented** — see limitations |
+
 
 **Sessions decide whether, traffic decides how much.** No attached users at an
 edge node means the application should not run there. Users present means it
@@ -139,13 +137,19 @@ CPU-based placement is blind to where traffic actually is, so it relocates
 services in ways that break more sessions than necessary. Details, and what is
 *not* reproducible here, in [`docs/reproducing.md`](docs/reproducing.md).
 
+## Related
+
+[edge-placement-notifier](https://github.com/mdalgitsis/edge-placement-notifier)
+is a Kubernetes operator from the same 6G-OASIS work that announces an edge
+application's new site over Kafka. It is independent of this repository and
+not part of this paper — it announces a placement change, it does not decide
+one.
+
 ## Known limitations
 
 - **HSECM is not implemented.** The paper's third mechanism offloads services
   to the cloud when an edge node exceeds its CPU capacity, choosing victims by
-  fewest users then highest CPU. This repository covers HSIA and HSRA only;
-  [`operator/`](operator/) announces a placement change but does not decide
-  one.
+  fewest users then highest CPU. This repository covers HSIA and HSRA only.
 - **The loop reacts; it does not predict.** Session and radio metrics move
   before CPU does, which buys a head start — not foresight.
 - **Replicas can oscillate at a boundary.** Visible in the demo: 7, 6, 7.
@@ -156,8 +160,6 @@ services in ways that break more sessions than necessary. Details, and what is
 - **The live loop is an independent implementation.** The original deployment
   realised this algorithm inside a commercial orchestration platform, which is
   proprietary and out of scope. Same algorithm; not the same system.
-- **Scaling and migration are not coordinated.** The autoscaler sizes; the
-  operator announces moves. Nothing arbitrates between them.
 - **Single replica, no leader election** on the autoscaler. Two would fight.
 
 ## Licence and attribution

@@ -95,9 +95,8 @@ calls were made configurable so they run headless.
 
 **Two of the three mechanisms are implemented.** `autoscaler/` covers HSIA and
 HSRA — lines 3–16 of Algorithm 1. HSECM, the CPU-capacity-driven offload to
-the cloud in lines 17–26, is not implemented: the
-[operator](../operator) announces a placement change but nothing here decides
-one.
+the cloud in lines 17–26, is not implemented here at all: nothing in this
+repository decides that an edge node is over capacity or chooses what to move.
 
 **The live loop is an independent implementation.** In the original deployment
 the scaling algorithm was realised inside a commercial orchestration platform,

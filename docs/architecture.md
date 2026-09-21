@@ -42,15 +42,12 @@ flowchart LR
         observe --> policy --> act
     end
     k8s[("Kubernetes<br/>edge Deployments")]
-    op["edge-placement-notifier<br/>(operator)"]
-    kafka[("Kafka")]
 
     cells -.->|in a real network| prom
     sim -->|metrics| prom
     prom --> observe
     k8s --> observe
     act --> k8s
-    k8s --> op -->|placement changed| kafka
     act --> prom
 ```
 
@@ -65,7 +62,6 @@ A cycle of the telemetry source, five cells across two edge nodes:
 ![UE simulation output](images/ue-simulation.png)
 
 | [`autoscaler/`](../autoscaler) | The control loop. Reads the signals, decides, applies. |
-| [`operator/`](../operator) | Kubernetes operator: when an application's edge placement changes, emit a Kafka event exactly once. |
 | [`studies/`](../studies) | The offline evaluation behind the paper. |
 
 ## The algorithm
@@ -136,16 +132,3 @@ connected them.
 Desired against current is the useful pair: a persistent gap means the loop is
 deciding correctly and the cluster is not complying, which is a different
 problem from deciding badly.
-
-## The migration notifier
-
-Scaling handles *how many*. Migration handles *where* — and when an application
-moves between edge nodes, something usually has to be told: a client holding a
-session, a gateway, a downstream service.
-
-The [operator](../operator) watches `EdgeAppPlacement` resources and emits a
-Kafka event when `spec.edgeNodeId` diverges from
-`status.lastNotifiedEdgeNodeId`. Comparing spec against status is what makes it
-**exactly-once**: a notification already sent is recorded, and a reconcile that
-re-runs for any other reason does not re-announce a migration that already
-happened.

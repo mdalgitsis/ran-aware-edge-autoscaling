@@ -8,11 +8,6 @@ __pycache__/
 .venv/
 venv/
 
-# Go build output -- anchored so it cannot swallow anything else named bin
-/operator/bin/
-/operator/testbin/
-/operator/cover.out
-
 # Packaged charts. Leading slash and the scoped subchart pattern matter:
 # a bare `charts/` would swallow the chart sources themselves.
 /dist/
