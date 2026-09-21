@@ -1,0 +1,45 @@
+{{- if .Values.serviceAccount.create }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ default (include "autoscaler.fullname" .) .Values.serviceAccount.name }}
+  labels:
+    {{- include "autoscaler.labels" . | nindent 4 }}
+{{- end }}
+{{- if .Values.rbac.create }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "autoscaler.fullname" . }}
+  namespace: {{ default .Release.Namespace .Values.workload.namespace }}
+  labels:
+    {{- include "autoscaler.labels" . | nindent 4 }}
+rules:
+  # Read to observe current replicas; scale to act. Deliberately no delete:
+  # undeploying means scaling to zero, so the loop never removes a Deployment
+  # it did not create.
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments/scale"]
+    verbs: ["get", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "autoscaler.fullname" . }}
+  namespace: {{ default .Release.Namespace .Values.workload.namespace }}
+  labels:
+    {{- include "autoscaler.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "autoscaler.fullname" . }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ default (include "autoscaler.fullname" .) .Values.serviceAccount.name }}
+    namespace: {{ .Release.Namespace }}
+{{- end }}

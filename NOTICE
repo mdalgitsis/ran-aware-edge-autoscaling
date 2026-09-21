@@ -1,0 +1,42 @@
+RAN-aware Edge Autoscaling
+Copyright 2026 Nearby Computing S.L.
+
+Licensed under the Apache License, Version 2.0. See LICENSE.
+
+Origin
+------
+This work was produced in the context of the 6GoASIS research project at
+Nearby Computing, and released by Nearby Computing under Apache-2.0 as a
+project deliverable. The copyright holder is Nearby Computing S.L.; the
+author of the work in this repository is Michail Dalgitsis.
+
+Publications
+------------
+The offline studies in studies/ are the evaluation behind:
+
+  M. Dalgitsis, G. M. Kibalya, M. A. Serrano, J. Serra and A. Antonopoulos,
+  "Exploiting 6G RAN and Core Network Information for Intelligent Edge-Cloud
+  Service Orchestration," 2025 Joint European Conference on Networks and
+  Communications & 6G Summit (EuCNC/6G Summit), Poznan, Poland, 2025,
+  pp. 369-374. doi: 10.1109/EuCNC/6GSummit63408.2025.11037032
+
+The closed-loop approach this repository implements is also one of the use
+cases in:
+
+  M. Dalgitsis, E. Datsika, C. Santana Casillas and A. Antonopoulos,
+  "6G-Core-in-the-Loop: Enabling Service and Network Orchestration in a
+  Cloud-Native Ecosystem," IEEE Communications Standards Magazine, vol. 10,
+  no. 2, pp. 72-79, June 2026. doi: 10.1109/MCOMSTD.2026.3657234
+
+Scope
+-----
+The original deployment realised the scaling algorithm inside a separate
+commercial orchestration platform. That platform is proprietary and out of
+scope here; the controller in autoscaler/ is an independent implementation of
+the published algorithm, written against Prometheus and the Kubernetes API
+alone.
+
+Third-party
+-----------
+The operator is scaffolded with Kubebuilder (Apache-2.0) and uses
+confluent-kafka-go (Apache-2.0).

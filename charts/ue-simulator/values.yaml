@@ -1,0 +1,40 @@
+---
+image:
+  repository: ghcr.io/mdalgitsis/ue-simulator
+  tag: "0.1.0"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+# Which cells each edge node serves. "edge1=A,B,C;edge2=D,E"
+topology: "edge1=A,B,C;edge2=D,E"
+
+traffic:
+  dataRateMinMbps: 1
+  dataRateMaxMbps: 10
+  maxUsersPerCell: 20
+
+timing:
+  simulationStep: 1
+  idlePeriod: 30
+  rampPeriod: 30
+  stepSize: 2
+  # 0 runs forever; a positive value stops after N cycles.
+  maxCycles: 0
+
+service:
+  port: 8000
+
+serviceMonitor:
+  enabled: true
+  interval: 5s
+  labels:
+    release: prometheus
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi

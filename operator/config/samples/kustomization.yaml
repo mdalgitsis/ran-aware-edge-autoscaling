@@ -1,0 +1,4 @@
+## Append samples of your project ##
+resources:
+- edge_v1_edgeappplacement.yaml
+# +kubebuilder:scaffold:manifestskustomizesamples

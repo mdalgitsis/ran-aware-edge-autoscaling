@@ -1,0 +1,14 @@
+apiVersion: edge.ranaware.dev/v1
+kind: EdgeAppPlacement
+metadata:
+  name: sample-placement
+  namespace: default
+spec:
+  appId: "edge-app-001"
+  edgeNodeId: "edge-node-42"
+  kafka:
+    broker: "kafka.messaging.svc.cluster.local:9092"
+    topic: "service-migration"
+    message:
+      eventType: "MIGRATION"
+

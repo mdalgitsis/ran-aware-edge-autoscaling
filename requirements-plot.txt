@@ -1,0 +1,6 @@
+# Needed only for the offline studies in studies/, which render figures.
+# The container images do not install these.
+-r requirements.txt
+matplotlib>=3.7,<4.0
+numpy>=1.24,<3.0
+seaborn>=0.13,<1.0

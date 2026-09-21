@@ -1,0 +1,13 @@
+---
+apiVersion: v2
+name: ue-simulator
+description: Synthetic RAN telemetry source exporting per-cell and per-edge metrics
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - 5g
+  - 6g
+  - ran
+  - telemetry
+  - prometheus

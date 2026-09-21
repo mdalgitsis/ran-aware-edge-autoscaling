@@ -1,0 +1,81 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "autoscaler.fullname" . }}
+  labels:
+    {{- include "autoscaler.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "autoscaler.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "autoscaler.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ default (include "autoscaler.fullname" .) .Values.serviceAccount.name }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+      containers:
+        - name: autoscaler
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - name: metrics
+              containerPort: {{ .Values.metrics.port }}
+          env:
+            - name: PROMETHEUS_URL
+              value: {{ .Values.prometheus.url | quote }}
+            - name: USERS_QUERY
+              value: {{ .Values.prometheus.usersQuery | quote }}
+            - name: TRAFFIC_QUERY
+              value: {{ .Values.prometheus.trafficQuery | quote }}
+            - name: EDGE_LABEL
+              value: {{ .Values.prometheus.edgeLabel | quote }}
+            - name: NAMESPACE
+              value: {{ default .Release.Namespace .Values.workload.namespace | quote }}
+            - name: DEPLOYMENT_TEMPLATE
+              value: {{ .Values.workload.deploymentTemplate | quote }}
+            - name: OPTIMAL_TRAFFIC_MBPS
+              value: {{ .Values.sla.optimalTrafficMbps | quote }}
+            - name: MIN_REPLICAS
+              value: {{ .Values.sla.minReplicas | quote }}
+            - name: MAX_REPLICAS
+              value: {{ .Values.sla.maxReplicas | quote }}
+            - name: DEADBAND
+              value: {{ .Values.sla.deadband | quote }}
+            - name: RECONCILE_INTERVAL
+              value: {{ .Values.loop.reconcileInterval | quote }}
+            - name: MAX_ITERATIONS
+              value: {{ .Values.loop.maxIterations | quote }}
+            - name: DRY_RUN
+              value: {{ .Values.loop.dryRun | quote }}
+            - name: METRICS_PORT
+              value: {{ .Values.metrics.port | quote }}
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: metrics
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: metrics
+            initialDelaySeconds: 15
+            periodSeconds: 30
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}

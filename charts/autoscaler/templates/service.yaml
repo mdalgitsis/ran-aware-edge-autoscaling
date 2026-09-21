@@ -1,0 +1,15 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "autoscaler.fullname" . }}
+  labels:
+    {{- include "autoscaler.labels" . | nindent 4 }}
+spec:
+  selector:
+    {{- include "autoscaler.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: metrics
+      protocol: TCP
+      port: {{ .Values.metrics.port }}
+      targetPort: metrics

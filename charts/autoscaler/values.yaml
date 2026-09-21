@@ -1,0 +1,58 @@
+---
+image:
+  repository: ghcr.io/mdalgitsis/ran-autoscaler
+  tag: "0.1.0"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+prometheus:
+  url: "http://prometheus.monitoring.svc.cluster.local:9090"
+  usersQuery: "ran_users_per_edge"
+  trafficQuery: "ran_data_rate_per_edge_mbps"
+  edgeLabel: "edge_node"
+
+workload:
+  # Deployment name per edge node. {edge_node} is substituted at runtime.
+  deploymentTemplate: "edge-app-{edge_node}"
+  # Namespace holding the managed Deployments. Defaults to the release namespace.
+  namespace: ""
+
+# SLA inputs: what one replica is specified to serve, and the bounds.
+sla:
+  optimalTrafficMbps: 50
+  minReplicas: 1
+  maxReplicas: 10
+  # 0 reproduces the published algorithm. Raise it in production to stop
+  # demand hovering at a replica boundary from scaling back and forth.
+  deadband: 0
+
+loop:
+  reconcileInterval: 10
+  maxIterations: 0
+  # Decide and export, but never write to the cluster.
+  dryRun: false
+
+metrics:
+  port: 9110
+
+serviceMonitor:
+  enabled: true
+  interval: 15s
+  labels:
+    release: prometheus
+
+rbac:
+  create: true
+
+serviceAccount:
+  create: true
+  name: ""
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi

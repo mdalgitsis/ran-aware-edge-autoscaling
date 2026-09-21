@@ -1,0 +1,23 @@
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+# The offline studies are the author's published simulation code, kept close to
+# the form it was evaluated in. Reformatting them would make the correspondence
+# with the paper harder to check, so only real errors are enforced there.
+extend-exclude = []
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.lint.per-file-ignores]
+"studies/*.py" = [
+    "E501", "E741", "B007", "SIM108", "SIM115", "UP031", "B905",
+    # E402/F841: these files keep the import order and the unused intermediate
+    # variables of the code the paper was evaluated with. Tidying them would
+    # make the correspondence with the published results harder to check.
+    "E402", "F841",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

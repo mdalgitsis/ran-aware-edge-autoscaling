@@ -1,0 +1,12 @@
+---
+apiVersion: v2
+name: autoscaler
+description: RAN-aware autoscaler - scales edge workloads on radio metrics
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - autoscaling
+  - edge
+  - ran
+  - orchestration

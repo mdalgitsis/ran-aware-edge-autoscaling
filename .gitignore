@@ -1,0 +1,31 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+
+# Environments
+.venv/
+venv/
+
+# Go build output -- anchored so it cannot swallow anything else named bin
+/operator/bin/
+/operator/testbin/
+/operator/cover.out
+
+# Packaged charts. Leading slash and the scoped subchart pattern matter:
+# a bare `charts/` would swallow the chart sources themselves.
+/dist/
+charts/*/charts/
+charts/*.tgz
+
+# Study outputs
+*.pdf
+*.csv
+energy_reduction_log.json
+!docs/**/*.pdf
+
+# Local overrides that may carry real endpoints
+values.local.yaml
+*.local.yaml
+.env

@@ -1,0 +1,72 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ue-simulator.fullname" . }}
+  labels:
+    {{- include "ue-simulator.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "ue-simulator.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "ue-simulator.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+      containers:
+        - name: simulator
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - name: metrics
+              containerPort: {{ .Values.service.port }}
+          env:
+            - name: TOPOLOGY
+              value: {{ .Values.topology | quote }}
+            - name: PROMETHEUS_PORT
+              value: {{ .Values.service.port | quote }}
+            - name: DATA_RATE_MIN
+              value: {{ .Values.traffic.dataRateMinMbps | quote }}
+            - name: DATA_RATE_MAX
+              value: {{ .Values.traffic.dataRateMaxMbps | quote }}
+            - name: MAX_USERS_PER_CELL
+              value: {{ .Values.traffic.maxUsersPerCell | quote }}
+            - name: SIMULATION_STEP
+              value: {{ .Values.timing.simulationStep | quote }}
+            - name: IDLE_PERIOD
+              value: {{ .Values.timing.idlePeriod | quote }}
+            - name: RAMP_PERIOD
+              value: {{ .Values.timing.rampPeriod | quote }}
+            - name: STEP_SIZE
+              value: {{ .Values.timing.stepSize | quote }}
+            - name: MAX_CYCLES
+              value: {{ .Values.timing.maxCycles | quote }}
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: metrics
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: metrics
+            initialDelaySeconds: 15
+            periodSeconds: 30
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}

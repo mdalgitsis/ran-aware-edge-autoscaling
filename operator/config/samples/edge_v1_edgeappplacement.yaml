@@ -1,0 +1,9 @@
+apiVersion: edge.ranaware.dev/v1
+kind: EdgeAppPlacement
+metadata:
+  labels:
+    app.kubernetes.io/name: kafkanotify-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: edgeappplacement-sample
+spec:
+  # TODO(user): Add fields here

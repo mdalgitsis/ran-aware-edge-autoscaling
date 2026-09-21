@@ -1,0 +1,11 @@
+.git
+.github
+__pycache__
+*.pyc
+docs
+charts
+tests
+studies
+operator
+misc
+*.md
