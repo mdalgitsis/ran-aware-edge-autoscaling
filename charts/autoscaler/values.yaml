@@ -8,7 +8,7 @@ imagePullSecrets: []
 
 prometheus:
   url: "http://prometheus.monitoring.svc.cluster.local:9090"
-  usersQuery: "ran_users_per_edge"
+  usersQuery: "cn_active_users_per_edge"
   trafficQuery: "ran_data_rate_per_edge_mbps"
   edgeLabel: "edge_node"
 

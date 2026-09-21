@@ -71,7 +71,7 @@ class RanSimulator:
             edge_users = 0
             edge_rate = 0.0
             for cell in cells:
-                metrics.users_per_cell.labels(edge_node=edge, cell_id=cell).set(
+                metrics.active_users_per_cell.labels(edge_node=edge, cell_id=cell).set(
                     self.users[cell]
                 )
                 metrics.data_rate_per_cell.labels(
@@ -80,7 +80,7 @@ class RanSimulator:
                 edge_users += self.users[cell]
                 edge_rate += self.data_rates[cell]
 
-            metrics.users_per_edge.labels(edge_node=edge).set(edge_users)
+            metrics.active_users_per_edge.labels(edge_node=edge).set(edge_users)
             metrics.data_rate_per_edge.labels(edge_node=edge).set(edge_rate)
             self.history[f"users:{edge}"].append(edge_users)
             self.history[f"rate:{edge}"].append(edge_rate)

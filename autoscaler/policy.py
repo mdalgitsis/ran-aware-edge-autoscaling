@@ -36,7 +36,9 @@ class Observation:
     """What the loop knows about one edge node this tick."""
 
     edge_node: str
+    #: attached subscriber sessions -- core network signal, drives HSIA
     active_users: int
+    #: aggregated radio traffic in Mbps -- RAN signal, drives HSRA
     data_rate_mbps: float
     deployed: bool
     current_replicas: int

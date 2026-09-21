@@ -33,7 +33,7 @@ def patch_queries(monkeypatch, users, traffic, fail=False):
     def fake_query(query, url=None):
         if fail:
             raise PrometheusUnavailable("scrape failed")
-        if query == "ran_users_per_edge":
+        if query == "cn_active_users_per_edge":
             return users
         return traffic
 

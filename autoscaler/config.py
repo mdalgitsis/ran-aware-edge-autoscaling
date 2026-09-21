@@ -11,7 +11,7 @@ PROMETHEUS_URL = os.getenv(
 PROMETHEUS_TIMEOUT = int(os.getenv("PROMETHEUS_TIMEOUT", "10"))
 
 # PromQL series produced by the RAN telemetry source.
-USERS_QUERY = os.getenv("USERS_QUERY", "ran_users_per_edge")
+USERS_QUERY = os.getenv("USERS_QUERY", "cn_active_users_per_edge")
 TRAFFIC_QUERY = os.getenv("TRAFFIC_QUERY", "ran_data_rate_per_edge_mbps")
 EDGE_LABEL = os.getenv("EDGE_LABEL", "edge_node")
 

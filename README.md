@@ -9,14 +9,19 @@ bitrate. **This scales edge workloads on that signal instead** — deploying an
 application when users appear at an edge node, sizing it to the radio traffic
 those users are generating, and removing it when the cells drain.
 
-Built for the **6GoASIS** project at Nearby Computing, and the implementation
-behind the evaluation in *Exploiting 6G RAN and Core Network Information for
-Intelligent Edge-Cloud Service Orchestration* (EuCNC/6G Summit 2025) —
-[doi:10.1109/EuCNC/6GSummit63408.2025.11037032](https://doi.org/10.1109/EuCNC/6GSummit63408.2025.11037032).
+It uses **both** halves the network can tell you, and they answer different
+questions:
 
-> The EuCNC title names both halves — **RAN and Core**. This is the RAN half.
-> The core half, reconfiguring 5G slice bitrate ceilings on acceptance ratio,
-> is [slice-ambr-closed-loop](https://github.com/mdalgitsis/slice-ambr-closed-loop).
+- **Core network** — how many subscriber sessions are attached at an edge
+  node. Derived from the SMF plus the application backend. This decides
+  whether the application needs to run there *at all*.
+- **RAN** — the aggregated radio traffic those users are generating. This
+  decides *how big* it needs to be.
+
+Built for the **6G-OASIS** project at Nearby Computing, implementing the NASO
+framework from *Exploiting 6G RAN and Core Network Information for Intelligent
+Edge-Cloud Service Orchestration* (EuCNC/6G Summit 2025) —
+[doi:10.1109/EuCNC/6GSummit63408.2025.11037032](https://doi.org/10.1109/EuCNC/6GSummit63408.2025.11037032).
 
 ## See it work, without a cluster
 
@@ -43,7 +48,7 @@ policy drives an in-memory stand-in for the Deployment.
 
 ```mermaid
 flowchart LR
-    sim["ue-simulator<br/>synthetic RAN telemetry"]
+    sim["ue-simulator<br/>synthetic CN + RAN telemetry"]
     prom[("Prometheus")]
     subgraph loop["autoscaler"]
         observe["observe"] --> policy["policy.decide()<br/><i>pure function</i>"] --> act["scale / deploy / undeploy"]
@@ -70,11 +75,18 @@ flowchart LR
 
 The whole algorithm is one pure function —
 [`policy.decide()`](autoscaler/policy.py). It takes an observation and returns
-a decision, with no I/O:
+a decision, with no I/O, and it is Algorithm 1 of the paper:
 
-**Presence drives deployment, traffic drives scale.** No users on an edge node
-means the application should not run there. Users present means it should,
-sized to `ceil(traffic / optimal_traffic_per_replica)` within the SLA bounds.
+| Paper | Signal | Here |
+| --- | --- | --- |
+| **HSIA** — Horizontal Service Instance Autoscaler | active user sessions (**CN**) | the `deploy` / `undeploy` branch |
+| **HSRA** — Horizontal Service Resource Autoscaler | aggregated radio traffic (**RAN**) | the `scale` branch, `R = ⌈T / T_opt⌉` (Eq. 1) |
+| **HSECM** — Horizontal Service Edge-Cloud Migration | edge CPU capacity | **not implemented** — see limitations |
+
+**Sessions decide whether, traffic decides how much.** No attached users at an
+edge node means the application should not run there. Users present means it
+should, sized to `ceil(traffic / optimal_traffic_per_replica)` within the SLA
+bounds.
 
 Keeping it pure is what lets every branch be tested without a cluster or a
 metrics backend, and lets the algorithm be read against the paper without
@@ -129,8 +141,13 @@ services in ways that break more sessions than necessary. Details, and what is
 
 ## Known limitations
 
-- **The loop reacts; it does not predict.** Radio metrics move before CPU does,
-  which buys a head start — not foresight.
+- **HSECM is not implemented.** The paper's third mechanism offloads services
+  to the cloud when an edge node exceeds its CPU capacity, choosing victims by
+  fewest users then highest CPU. This repository covers HSIA and HSRA only;
+  [`operator/`](operator/) announces a placement change but does not decide
+  one.
+- **The loop reacts; it does not predict.** Session and radio metrics move
+  before CPU does, which buys a head start — not foresight.
 - **Replicas can oscillate at a boundary.** Visible in the demo: 7, 6, 7.
   `deadband` suppresses it and defaults to 0, because 0 is what the paper
   evaluated.
@@ -146,7 +163,13 @@ services in ways that break more sessions than necessary. Details, and what is
 ## Licence and attribution
 
 [Apache-2.0](LICENSE). Copyright 2026 Nearby Computing S.L.; released by
-Nearby Computing as a 6GoASIS project deliverable. See [`NOTICE`](NOTICE).
+Nearby Computing as a 6G-OASIS project deliverable. See [`NOTICE`](NOTICE).
+
+The paper is joint work with colleagues at Nearby Computing and the Centre
+Tecnològic de Telecomunicacions de Catalunya (CTTC). It was supported in part
+by the Horizon Europe SNS JU **UNITY-6G** project (European Commission,
+ID 101192650) and the **6G-OASIS** project (TSI-063000-2021-24) under the
+UNICO5G-RPTR programme.
 
 If you use this work, please cite:
 

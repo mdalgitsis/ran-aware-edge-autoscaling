@@ -125,7 +125,7 @@
           },
           "editorMode": "builder",
           "exemplar": false,
-          "expr": "ran_users_per_cell",
+          "expr": "cn_active_users_per_cell",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -319,7 +319,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "builder",
-          "expr": "sum by(edge_node) (ran_users_per_cell)",
+          "expr": "sum by(edge_node) (cn_active_users_per_cell)",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"

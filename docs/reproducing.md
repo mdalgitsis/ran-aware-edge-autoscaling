@@ -19,10 +19,19 @@ The closed loop itself is one of the use cases in:
 > no. 2, pp. 72–79, June 2026.
 > doi: [10.1109/MCOMSTD.2026.3657234](https://doi.org/10.1109/MCOMSTD.2026.3657234)
 
-The EuCNC title names both halves — **RAN and Core**. This repository is the
-RAN half: scaling and placing edge services on radio information. The core half,
-reconfiguring 5G slice bitrate ceilings on acceptance ratio, is in
-[slice-ambr-closed-loop](https://github.com/mdalgitsis/slice-ambr-closed-loop).
+The paper proposes **NASO** (Network-aware Service Orchestration), a framework
+with three mechanisms. The title's "RAN and Core" is not two systems — it is
+two *signals*, consumed by the same orchestrator:
+
+| Mechanism | Signal | Source | Here |
+| --- | --- | --- | --- |
+| **HSIA** — Instance Autoscaler | active user sessions | **Core network.** §IV notes this cannot be read from a single network API; it is derived by combining the SMF's active-session data with the application backend. | `deploy` / `undeploy` |
+| **HSRA** — Resource Autoscaler | aggregated radio traffic from base stations | **RAN** | `scale`, `R = ⌈T / T_opt⌉` (Eq. 1) |
+| **HSECM** — Edge-Cloud Migration | edge CPU capacity | orchestrator | **not implemented here** |
+
+That distinction is why the exported metrics carry different prefixes:
+`cn_active_users_*` is core data, `ran_data_rate_*` is radio data. Collapsing
+them into one "RAN metrics" bucket would lose the point of the paper.
 
 ## Decoding the names
 
@@ -30,7 +39,8 @@ The papers' shorthand carries into the code:
 
 | Paper | Here |
 | --- | --- |
-| **NASO** — network-aware service orchestration | The proposed approach: use what the network already knows about users and traffic. |
+| **NASO** — Network-aware Service Orchestration | The proposed framework, and the label for its strategy in the comparison plots. |
+| **Full-Deployment** | The energy baseline: deploy every application in every region regardless of demand. |
 | **Random-SM** | Service migration to a randomly chosen destination. |
 | **CPU-based-High/Low-SM** | Migration chosen on CPU headroom — what a conventional scheduler does. |
 | **UASM** | Users Affected by Service Migration, as a percentage. |
@@ -56,6 +66,12 @@ NASO                 mean UASM @100Mbps:  33.6%
 CPU-based placement is blind to where the traffic actually is, so it relocates
 services in ways that break more sessions than necessary.
 
+These are means across all user counts at 100 Mb/s per replica, which is not
+the paper's headline figure — that one is ~17–18% for NASO at **500** Mb/s per
+replica, against >80% for Random-SM and CPU-based-Low-SM in the most
+constrained cases. Higher per-replica capacity needs fewer replicas, so fewer
+migrations, so less user impact; the study sweeps both scenarios.
+
 **Energy efficiency** — deploying everywhere versus deploying where demand is.
 Reduction grows with the number of applications and is largely independent of
 the number of regions:
@@ -76,6 +92,12 @@ Both studies are seeded, so a given seed reproduces a given figure.
 **The studies reproduce.** The simulation models are unchanged from the
 versions used for the paper; only the output paths and the blocking `show()`
 calls were made configurable so they run headless.
+
+**Two of the three mechanisms are implemented.** `autoscaler/` covers HSIA and
+HSRA — lines 3–16 of Algorithm 1. HSECM, the CPU-capacity-driven offload to
+the cloud in lines 17–26, is not implemented: the
+[operator](../operator) announces a placement change but nothing here decides
+one.
 
 **The live loop is an independent implementation.** In the original deployment
 the scaling algorithm was realised inside a commercial orchestration platform,
@@ -100,3 +122,11 @@ scale back and undeploy. Two things in that output are worth not glossing over:
   already risen. Radio metrics buy you a head start over CPU — the users are
   visible before their load reaches the application — but it is a head start,
   not foresight.
+
+## Funding
+
+The work was supported in part by the Horizon Europe SNS JU **UNITY-6G**
+project (European Commission, ID 101192650) and the **6G-OASIS** project
+(TSI-063000-2021-24) under the UNICO5G-RPTR programme. The paper is joint work
+with colleagues at Nearby Computing and the Centre Tecnològic de
+Telecomunicacions de Catalunya (CTTC).

@@ -1,6 +1,6 @@
 # Architecture
 
-## Why radio metrics
+## Why network metrics, and which ones
 
 A conventional autoscaler watches CPU. By the time CPU rises, the load has
 already arrived, the replicas are already struggling, and the users are already
@@ -8,21 +8,32 @@ seeing it. At the edge this is worse than in a datacentre: sites are small, so
 there is less headroom to absorb the lag, and the workload may need *deploying*
 first, not merely scaling.
 
-The radio network knows earlier. A user equipment attaches to a cell before it
-generates application traffic, and the cell reports both the attachment and the
-bitrate. That is a leading signal, and it is the one this system scales on.
+The mobile network knows earlier, and it knows two different things:
+
+**The core network knows who is attached.** Subscriber sessions are visible in
+the SMF before those users generate any application traffic. That answers a
+question CPU cannot: should this application exist at this edge node at all?
+An edge node with no attached sessions should not be running it.
+
+**The RAN knows how much is flowing.** Aggregated bitrate per cell says how
+much capacity the attached users actually need right now, which sizes the
+deployment.
+
+Using only one of the two collapses the design. Traffic alone cannot tell you
+to undeploy — idle traffic and no users look identical. Sessions alone cannot
+tell you how many replicas to run.
 
 It is a head start, not prediction. The loop still reacts; it just reacts to
-something that moves sooner.
+something that moves sooner than CPU.
 
 ## The pieces
 
 ```mermaid
 flowchart LR
     subgraph ran["RAN"]
-        cells["Cells A-E<br/>users + bitrate"]
+        cells["Cells A-E"]
     end
-    sim["ue-simulator<br/>(synthetic RAN telemetry)"]
+    sim["ue-simulator<br/>(synthetic CN sessions + RAN traffic)"]
     prom[("Prometheus")]
     subgraph loop["autoscaler"]
         observe["observe<br/>users, traffic, replicas"]
@@ -47,7 +58,7 @@ Four components, each usable on its own:
 
 | | |
 | --- | --- |
-| [`ue_simulator/`](../ue_simulator) | Generates RAN telemetry, because you cannot get real radio metrics on a laptop. Idle → ramp-up → ramp-down, repeating. |
+| [`ue_simulator/`](../ue_simulator) | Generates both signals — session counts and radio traffic — because you have neither a core nor a radio on a laptop. Idle → ramp-up → ramp-down, repeating. |
 
 A cycle of the telemetry source, five cells across two edge nodes:
 
@@ -116,7 +127,7 @@ connected them.
 
 | Series | |
 | --- | --- |
-| `ran_autoscaler_observed_users` / `_observed_traffic_mbps` | What the policy saw |
+| `ran_autoscaler_observed_users` / `_observed_traffic_mbps` | What the policy saw (core sessions, radio traffic) |
 | `ran_autoscaler_desired_replicas` | What it asked for |
 | `ran_autoscaler_current_replicas` | What was there |
 | `ran_autoscaler_actions_total` | Decisions, by action |
